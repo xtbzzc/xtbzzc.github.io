@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>小车直线运动实验</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin: 20px;
+            width: 800px;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input {
+            padding: 8px;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        #canvas {
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            background: #ecf0f1;
+        }
+
+        .data-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .data-item {
+            margin: 5px 0;
+            color: #34495e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: #2c3e50; text-align: center;">🚗 小车运动模拟实验</h1>
+        
+        <div class="control-panel">
+            <div class="input-group">
+                <label>初速度 (m/s):</label>
+                <input type="number" id="initialVelocity" value="0">
+            </div>
+            <div class="input-group">
+                <label>加速度 (m/s²):</label>
+                <input type="number" id="acceleration" value="2">
+            </div>
+            <div class="input-group">
+                <label>质量 (kg):</label>
+                <input type="number" id="mass" value="1">
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <button onclick="startSimulation()">开始实验</button>
+            <button onclick="reset()">重置</button>
+        </div>
+
+        <canvas id="canvas" width="800" height="200"></canvas>
+
+        <div class="data-panel">
+            <div class="data-item">当前时间: <span id="time">0</span> s</div>
+            <div class="data-item">位移: <span id="displacement">0</span> m</div>
+            <div class="data-item">速度: <span id="velocity">0</span> m/s</div>
+            <div class="data-item">加速度: <span id="currentAcc">0</span> m/s²</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let animationId;
+        let startTime;
+        let isRunning = false;
+
+        function drawCar(x) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制轨道
+            ctx.beginPath();
+            ctx.moveTo(50, 150);
+            ctx.lineTo(750, 150);
+            ctx.strokeStyle = '#7f8c8d';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // 绘制小车
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(x, 100, 80, 40);
+            ctx.fillStyle = '#2c3e50';
+            ctx.beginPath();
+            ctx.arc(x + 20, 140, 15, 0, Math.PI * 2);
+            ctx.arc(x + 60, 140, 15, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function updateData(t, displacement, velocity, acceleration) {
+            document.getElementById('time').textContent = t.toFixed(1);
+            document.getElementById('displacement').textContent = displacement.toFixed(1);
+            document.getElementById('velocity').textContent = velocity.toFixed(1);
+            document.getElementById('currentAcc').textContent = acceleration.toFixed(1);
+        }
+
+        function animate() {
+            const currentTime = (Date.now() - startTime) / 1000;
+            const a = parseFloat(document.getElementById('acceleration').value);
+            const v0 = parseFloat(document.getElementById('initialVelocity').value);
+            
+            const displacement = v0 * currentTime + 0.5 * a * currentTime ** 2;
+            const velocity = v0 + a * currentTime;
+            const x = 50 + displacement * 5; // 放大位移比例
+
+            if (x < 750) {
+                drawCar(x);
+                updateData(currentTime, displacement, velocity, a);
+                animationId = requestAnimationFrame(animate);
+            } else {
+                cancelAnimationFrame(animationId);
+                isRunning = false;
+            }
+        }
+
+        function startSimulation() {
+            if (!isRunning) {
+                isRunning = true;
+                startTime = Date.now();
+                animate();
+            }
+        }
+
+        function reset() {
+            cancelAnimationFrame(animationId);
+            isRunning = false;
+            drawCar(50);
+            updateData(0, 0, 0, 0);
+        }
+
+        // 初始化
+        reset();
+    </script>
+</body>
+</html>
